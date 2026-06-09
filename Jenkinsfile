@@ -48,7 +48,7 @@ pipeline {
         steps {
 			// 1. Enviar el código a analizar a SonarQube
             withSonarQubeEnv('MiSonarServer') {
-                sh 'mvn clean verify sonar:sonar'
+                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=learning-center'
             }
 			// 2. Pausar el pipeline y esperar la respuesta del Webhook de SonarQube
 	        script {
@@ -73,8 +73,13 @@ pipeline {
                     
                     // Ejecuta el comando de Docker utilizando el socket compartido del Host
                     // Supone que tienes un archivo 'Dockerfile' en la raíz de tu proyecto Spring Boot
-                    sh "docker build -t ${IMAGE_NAME}:${TAG} ."
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                    //sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                    //sh "docker build -t ${IMAGE_NAME}:latest ."
+
+					echo "Construyendo imagen híbrida/compatible con servidores de producción (AMD64)..."
+					// Usamos 'buildx' para asegurar que la imagen de salida sea estrictamente para plataformas de 64 bits estándar
+					sh "docker buildx build --platform linux/amd64 -t ${IMAGE_NAME}:${TAG} --load ."
+					sh "docker buildx build --platform linux/amd64 -t ${IMAGE_NAME}:latest --load ."
                     
                     echo "Imagen construida exitosamente."
                 }
